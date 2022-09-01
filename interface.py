@@ -13,7 +13,6 @@ def fetch(timestamp):
     else return None
 
 # end section
-
 # section transfer agent
 
 @socket_method
@@ -39,3 +38,7 @@ def resolve_target(target):
             return None
     else:
         return results
+
+# endsubsection
+# endsection
+
