@@ -1,45 +1,52 @@
-use actix::prelude::*;
+use nom::AsBytes;
+use pbkdf2::{
+    password_hash::{
+        PasswordHash, PasswordHasher, PasswordVerifier, SaltString
+    },
+    Pbkdf2
+};
+use pbkdf2::password_hash::rand_core;
+use rand::rngs::OsRng;
 
-#[derive(Message)]
-#[rtype(result = "usize")]
-struct Ping(usize);
+mod encryption;
 
-#[derive(Message)]
-#[rtype(result = "usize")]
-struct Greet(String);
-
-struct MyActor {
-    count: usize,
-    message: String
-}
-
-impl Actor for MyActor {
-    type Context = Context<Self>;
-}
-
-impl Handler<Ping> for MyActor {
-    type Result = usize;
-    fn handle(&mut self, msg: Ping, ctx: &mut Self::Context) -> Self::Result {
-        self.count += msg.0;
-        self.count
+fn encrypt(key: &str, string: &str) -> Vec<u8> {
+    let ciphertext: Vec<u8>;
+    let mut bytes = string.bytes();
+    let mut i: usize = 0;
+    let mut blocks: Vec<[u8; 16]> = vec![];
+    let mut block: [u8; 16] = [0; 16];
+    loop {
+        if i % 16 == 0 && i > 0 {
+            blocks.push(block.clone());
+            block = [0; 16];
+        }
+        match bytes.next() {
+            Some(byte) => {
+                block[i % 16] = byte;
+                i += 1;
+            },
+            None => break
+        };
     }
-}
-
-impl Handler<Greet> for MyActor {
-    type Result = usize;
-    fn handle(&mut self, msg: Greet, ctx: &mut Self::Context) -> Self::Result {
-        self.message = msg.0;
-        self.count += self.message.len();
-        println!("Sender says: {}!", &self.message);
-        self.count
+    if i % 16 != 0 {
+        blocks.push(block.clone());
     }
+    let salt = pbkdf2::password_hash::SaltString::generate(&mut OsRng);
+    let key_hash = match pbkdf2::Pbkdf2.hash_password(key.as_bytes(), &salt) {
+        Ok(hash) => hash.to_string().as_bytes(),
+        Err(error) => panic!("failed to hash password")
+    };
+    encryption::encrypt(key_hash.clone_from_slice(), blocks)
 }
 
-#[actix_rt::main]
-async fn main() {
-    let addr = MyActor { count: 10, message: "".to_owned() }.start();
-    let mut res = addr.send(Ping(10)).await;
-    res = addr.send(Greet("Hello, Actix!".to_owned())).await; 
-    println!("New size: {}", res.unwrap());
-    System::current().stop();
+fn main() {
+    let mut input: String = "".to_owned();
+    let ciphertext: Vec<u8>;
+    let stdin = std::io::stdin();
+    match stdin.read_line(&mut input) {
+        Ok(bytes) => ciphertext = encrypt(input),
+        Err(error) => panic!("failed to read from stdin")
+    }
+
 }
