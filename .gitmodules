@@ -1,0 +1,6 @@
+[submodule "transfer-agent"]
+	path = transfer-agent
+	url = git@github.com:asifZaman0362/transfer-agent.git
+[submodule "mail-server"]
+	path = mail-server
+	url = git@github.com:asifZaman0362/mail-server.git
