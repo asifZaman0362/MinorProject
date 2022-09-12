@@ -1,11 +1,9 @@
 # Minor Project
----
-Possible topics:
-1. E2E encrypted email stored locally or on a server of your own choosing.
-2. Passman on steroids
 
-Secure Locker:
----
-An encrypted embedded database that is self-hosted, containing critical information
-about the user such as login credentials to various websites, secure notes, bank details,
-credit cards, ID cards. 
+Minor project for my undergraduate degree.
+This project delivers a secure end-to-end encrypted online mail
+exchange service using the [signal protocol](https://en.wikipedia.org/wiki/Signal_Protocol).
+
+Furthermore, it also implements an extra layer of security by encrypting the whole message database
+using RSA, ensuring the privacy of user messages even if a malicious agent attains full control
+of the mail server.
